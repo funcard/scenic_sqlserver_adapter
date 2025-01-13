@@ -1,84 +1,126 @@
-require 'spec_helper'
+require "spec_helper"
 
-module Scenic
-  module Adapters
-    
-    RSpec.describe SqlServer do
-      let(:connection) { double :connection }
-      let(:connectable) { double :connectable, connection: connection }
-      
-      subject { SqlServer.new(connectable) }
-      
-      context 'with no connectable specified' do
-        subject { SqlServer.new }
-        
-        it 'defaults connectiable to ActiveRecord::Base' do
-          expect(subject.send(:connectable)).to be ActiveRecord::Base
-        end
-      end
-      
-      describe 'views' do
-        it 'returns all from an instance of SqlServer::Views with the connection' do
-          all = double :all
-          views = double :views, all: all
-          allow(SqlServer::Views).to receive(:new).with(connection).and_return(views)
-          expect(subject.views).to be all
-        end
-      end
-      
-      describe 'view operations' do
-        before do
-          allow(connection).to receive(:quote_table_name) { |name| "[#{name}]" }
-        end
-        
-        describe 'create_view' do  
-          it 'executes CREATE VIEW SQL on the connection' do
-            expect(connection).to receive(:execute).with('CREATE VIEW [to_a_kill] AS SELECT phoenix FROM the_flame;')
-            subject.create_view('to_a_kill', 'SELECT phoenix FROM the_flame')
-          end
-        end
-        
-        describe 'drop_view' do  
-          it 'executes DROP VIEW SQL on the connection' do
-            expect(connection).to receive(:execute).with("IF OBJECT_ID('[to_a_kill]') IS NOT NULL DROP VIEW [to_a_kill];")
-            subject.drop_view('to_a_kill')
-          end
-        end
-        
-        describe 'update_view' do  
-          it 'drops and recreates the view' do
-            allow(connection).to receive(:execute)
-            expect(subject).to receive(:drop_view).with('to_a_kill')
-            expect(subject).to receive(:create_view).with('to_a_kill', 'SELECT fatal_kiss FROM all_we_need')
-            subject.update_view('to_a_kill', 'SELECT fatal_kiss FROM all_we_need')
-          end
-        end
-      end
-      
-      describe 'unsupported operations' do
-        let(:name) { 'feel_the_chill' }
-        let(:sql) { 'SELECT fatal_kiss FROM all_we_need' }
-        
-        %i[
-          replace_view
-          create_materialized_view
-          update_materialized_view
-        ].each do |operation|
-          it "does not support #{operation}" do
-            expect{subject.send(operation, name, sql)}.to raise_error SqlServer::NotSupportedError
-          end
-        end
-        
-        %i[
-          refresh_materialized_view
-          drop_materialized_view
-        ].each do |operation|
-          it "does not support #{operation}" do
-            expect{subject.send(operation ,name)}.to raise_error SqlServer::NotSupportedError
-          end
-        end
-      end
+RSpec.describe Scenic::Adapters::SqlServer do
+  describe "#create_view" do
+    it "successfully creates a view" do
+      adapter = described_class.new
+
+      adapter.create_view("greetings", "SELECT 'hi' AS greeting")
+
+      expect(adapter.views.map(&:name)).to include("greetings")
     end
-    
+  end
+
+  describe "#update_view" do
+    it "updates the view" do
+      adapter = described_class.new
+
+      adapter.create_view("greetings", "SELECT 'hi' AS greeting")
+      view = adapter.views.find { |v| v.name == "greetings" }
+      expect(view.definition).to eq("SELECT 'hi' AS greeting")
+
+      adapter.update_view("greetings", "SELECT 'hello' AS greeting")
+      view = adapter.views.find { |v| v.name == "greetings" }
+      expect(view.definition).to eq("SELECT 'hello' AS greeting")
+    end
+  end
+
+  describe "#replace_view" do
+    it "raises an exception" do
+      adapter = described_class.new
+      err = described_class::NotSupportedError
+      adapter.create_view("greetings", "SELECT 'hi' AS greeting")
+      expect { adapter.replace_view("greetings", "SELECT text 'hello' AS greeting") }
+        .to raise_error err
+    end
+  end
+
+  describe "#drop_view" do
+    it "successfully drops a view" do
+      adapter = described_class.new
+
+      adapter.create_view("greetings", "SELECT 'hi' AS greeting")
+      adapter.drop_view("greetings")
+
+      expect(adapter.views.map(&:name)).not_to include("greetings")
+    end
+  end
+
+  describe "#create_materialized_view" do
+    it "raises an exception" do
+      adapter = described_class.new
+      err = described_class::NotSupportedError
+
+      expect { adapter.create_materialized_view("greetings", "select 1") }
+        .to raise_error err
+    end
+  end
+
+  describe "#update_materialized_view" do
+    it "raises an exception" do
+      adapter = described_class.new
+      err = described_class::NotSupportedError
+
+      expect { adapter.update_materialized_view("greetings", "select 1") }
+        .to raise_error err
+    end
+  end
+
+  describe "#refresh_materialized_view" do
+    it "raises an exception" do
+      adapter = described_class.new
+      err = described_class::NotSupportedError
+
+      expect { adapter.refresh_materialized_view("greetings") }
+        .to raise_error err
+    end
+  end
+
+  describe "#drop_materialized_view" do
+    it "raises an exception" do
+      adapter = described_class.new
+      err = described_class::NotSupportedError
+
+      expect { adapter.drop_materialized_view("greetings") }
+        .to raise_error err
+    end
+  end
+
+  describe "#views" do
+    it "returns the views defined on this connection" do
+      adapter = described_class.new
+
+      ActiveRecord::Base.connection.execute <<-SQL
+            CREATE VIEW parents AS SELECT 'Joe' AS name
+      SQL
+
+      ActiveRecord::Base.connection.execute <<-SQL
+            CREATE VIEW children AS SELECT 'Owen' AS name
+      SQL
+
+      ActiveRecord::Base.connection.execute <<-SQL
+            CREATE VIEW people AS
+            SELECT name FROM parents UNION SELECT name FROM children
+      SQL
+
+      ActiveRecord::Base.connection.execute <<-SQL
+            CREATE VIEW people_with_names AS
+            SELECT name FROM people
+            WHERE name IS NOT NULL
+      SQL
+
+      expect(adapter.views.map(&:name)).to eq [
+        "parents",
+        "children",
+        "people",
+        "people_with_names",
+      ]
+      expect(adapter.views.map(&:materialized)).to eq [
+        false,
+        false,
+        false,
+        false,
+      ]
+    end
   end
 end

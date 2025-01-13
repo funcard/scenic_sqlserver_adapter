@@ -50,8 +50,10 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
 
-      # - name: Install dependent libraries
-      #   run: sudo apt-get install libpq-dev
+      - name: Install dependent libraries
+        run: sudo apt install freetds-dev freetds-bin
+
+      - run: echo "CREATE DATABASE scenic_test" | tsql -H localhost -p 1433 -U sa -P yourStrongPassword123
 
       - name: Generate lockfile
         run: bundle lock
