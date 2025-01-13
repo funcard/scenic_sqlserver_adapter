@@ -65,9 +65,9 @@ jobs:
       - name: Set up Scenic
         run: bin/setup
 
-      # - name: Run fast tests
-      #   run: bundle exec rake spec
-      #   continue-on-error: ${{ matrix.continue-on-error }}
+      - name: Run tests
+        run: bundle exec rake spec
+        continue-on-error: ${{ matrix.continue-on-error }}
 
       # - name: Run acceptance tests
       #   run: bundle exec rake spec:acceptance
