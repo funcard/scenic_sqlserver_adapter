@@ -76,7 +76,7 @@ GEM
       method_source
       rake (>= 0.13)
       thor (~> 1.0)
-    rake (10.5.0)
+    rake (13.2.1)
     rspec (3.13.0)
       rspec-core (~> 3.13.0)
       rspec-expectations (~> 3.13.0)
@@ -111,7 +111,7 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
-  rake (~> 10.0)
+  rake
   rspec (~> 3.0)
   rspec_junit_formatter
   scenic_sqlserver_adapter!
