@@ -15,7 +15,7 @@ Gem::Specification.new do |spec|
   spec.files = `git ls-files -z`.split("\x0")
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "scenic", "~> 1.8"
+  spec.add_dependency "scenic", "~> 1.9"
 
   spec.add_development_dependency "rake"
   spec.add_development_dependency "activerecord-sqlserver-adapter"
