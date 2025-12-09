@@ -1,5 +1,3 @@
-require "spec_helper"
-
 module Scenic
   module Adapters
     
