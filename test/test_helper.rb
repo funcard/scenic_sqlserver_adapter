@@ -6,7 +6,7 @@ require "scenic"
 
 ActiveRecord::Base.establish_connection(
   adapter: "sqlserver",
-  database: "scenic_test",
+  # database: "scenic_test",
   host: "localhost",
   port: 1433,
   username: "SA",

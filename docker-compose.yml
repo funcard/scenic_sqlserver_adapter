@@ -1,0 +1,11 @@
+services:
+  db:
+    platform: linux/amd64
+    image: mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04
+    ports:
+      - 1433:1433
+    environment:
+      MSSQL_SA_PASSWORD: yourStrongPassword123
+      ACCEPT_EULA: "Y"
+    volumes:
+      - ./tmp/mssql:/var/opt/mssql

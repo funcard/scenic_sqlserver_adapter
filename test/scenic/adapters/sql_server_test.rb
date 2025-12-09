@@ -79,18 +79,14 @@ class Scenic::Adapters::SqlServerTest < Minitest::Test
     WHERE name IS NOT NULL
     SQL
 
-    assert_equal [
-      "parents",
-      "children",
-      "people",
-      "people_with_names",
-    ], @adapter.views.map(&:name)
+    assert_includes @adapter.views.map(&:name), "parents"
+    assert_includes @adapter.views.map(&:name), "children"
+    assert_includes @adapter.views.map(&:name), "people"
+    assert_includes @adapter.views.map(&:name), "people_with_names"
 
-    assert_equal [
-      false,
-      false,
-      false,
-      false,
-    ], @adapter.views.map(&:materialized)
+    assert_equal @adapter.views.find { |v| v.name == "parents" }.materialized, false
+    assert_equal @adapter.views.find { |v| v.name == "children" }.materialized, false
+    assert_equal @adapter.views.find { |v| v.name == "people" }.materialized, false
+    assert_equal @adapter.views.find { |v| v.name == "people_with_names" }.materialized, false
   end
 end

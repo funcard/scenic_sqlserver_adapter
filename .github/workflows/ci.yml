@@ -53,17 +53,6 @@ jobs:
       - name: Install dependent libraries
         run: sudo apt install freetds-dev freetds-bin
 
-      - run: echo "CREATE DATABASE scenic_test" | tsql -H localhost -p 1433 -U sa -P yourStrongPassword123
-
-      - name: Generate lockfile
-        run: bundle lock
-
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: vendor/bundle
-          key: bundle-${{ hashFiles('Gemfile.lock') }}
-
       - name: Set up Scenic
         run: bin/setup
 
