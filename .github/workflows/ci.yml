@@ -66,5 +66,5 @@ jobs:
         run: bin/setup
 
       - name: Run tests
-        run: bundle exec rake test
+        run: bundle exec rake spec
         continue-on-error: ${{ matrix.continue-on-error }}
