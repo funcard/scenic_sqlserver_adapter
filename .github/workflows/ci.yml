@@ -53,6 +53,9 @@ jobs:
       - name: Install dependent libraries
         run: sudo apt install freetds-dev freetds-bin
 
+      - name: Generate lockfile
+        run: bundle lock
+
       - name: Set up Scenic
         run: bin/setup
 
